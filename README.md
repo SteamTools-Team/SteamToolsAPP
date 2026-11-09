@@ -13,8 +13,9 @@
 
 ## About
 
-This is the **public, open-source** release of SteamTools, published for transparency so the
-community can read and audit the code.
+This is the **public, source-available** release of SteamTools, published **for transparency and
+reference only** so the community can read, study and audit the code. It is **not** open-source:
+redistribution and modified/derivative versions are not permitted (see [License](#license)).
 
 > **Note on this build**
 >   endpoints before building (see [Configuration](#configuration)).
@@ -70,7 +71,11 @@ Replace the placeholder endpoints with your own before building:
 
 ## License
 
-Licensed under the **GNU General Public License v3.0**. See [`LICENSE`](LICENSE).
+**Source-available — No Redistribution.** The code is published for reading, studying and
+auditing only. You may view it and build it locally for personal evaluation, but you may **not**
+redistribute it, publish modified or derivative versions, or use it in other software. All rights
+reserved. See [`LICENSE`](LICENSE) for the full terms. (`third_party/` components keep their own
+licenses.)
 
 ## Disclaimer
 

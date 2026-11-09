@@ -1,30 +1,46 @@
-                    GNU GENERAL PUBLIC LICENSE
-                       Version 3, 29 June 2007
+SteamTools — Source-Available License (No Redistribution)
+Copyright (c) 2026 SteamTools-Team. All rights reserved.
 
-  SteamTools — a desktop app for managing Steam games, fixes and achievements.
-  Copyright (C) 2026 SteamTools
+This source code is published publicly for TRANSPARENCY and REFERENCE ONLY, so
+that anyone may read, study and audit it. It is NOT open-source software and is
+NOT placed in the public domain.
 
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+1. Permission granted
+   You are permitted to:
+   (a) view and read this source code; and
+   (b) build and run it locally for your own personal, non-commercial
+       evaluation.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+2. Restrictions
+   You MAY NOT, without the prior written permission of the copyright holder:
+   (a) redistribute, publish, mirror, host or otherwise share this code or any
+       part of it, in original or modified form, by any means;
+   (b) create, distribute, publish or make available any modified version,
+       fork, derivative work or product based on this code or any part of it;
+   (c) incorporate this code, in whole or in part, into any other software;
+   (d) use this code or any part of it for any commercial purpose;
+   (e) sell, rent, sublicense or otherwise transfer this code; or
+   (f) remove, obscure or alter this license or any copyright notice.
 
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+3. Reservation of rights
+   All rights not expressly granted in Section 1 are reserved by the copyright
+   holder. No license is granted by implication, estoppel or otherwise.
 
--------------------------------------------------------------------------------
+4. Third-party components
+   Files contained in the "third_party/" directory (for example go-webview2)
+   are the property of their respective authors and remain governed solely by
+   their own licenses. This license does not apply to those files.
 
-  IMPORTANT: This file must contain the FULL text of the GNU General Public
-  License version 3. Replace everything below this line with the official text
-  from:
+5. No warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+   OF THE SOFTWARE.
 
-      https://www.gnu.org/licenses/gpl-3.0.txt
+6. Termination
+   Any breach of these terms automatically and immediately terminates the
+   permissions granted in Section 1.
 
-  (On GitHub you can also use "Add file" -> "Create new file" -> name it
-  "LICENSE" -> "Choose a license template" -> "GNU GPLv3", which inserts the
-  full text automatically.)
+For permissions beyond the scope of this license, contact the copyright holder.
