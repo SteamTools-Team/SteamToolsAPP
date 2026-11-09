@@ -1,0 +1,26 @@
+{
+  "IconPath": "web/icon.ico",
+  "ManifestPath": "SteamTools.exe.manifest",
+  "FixedFileInfo": {
+    "FileVersion":    { "Major": 2, "Minor": 84, "Patch": 0, "Build": 0 },
+    "ProductVersion": { "Major": 2, "Minor": 84, "Patch": 0, "Build": 0 },
+    "FileFlagsMask": "3f",
+    "FileFlags":     "00",
+    "FileOS":        "040004",
+    "FileType":      "01",
+    "FileSubType":   "00"
+  },
+  "StringFileInfo": {
+    "CompanyName":      "SteamTools Team",
+    "ProductName":      "SteamTools",
+    "FileDescription":  "SteamTools",
+    "InternalName":     "SteamTools",
+    "OriginalFilename": "SteamTools.exe",
+    "FileVersion":      "2.84.0.0",
+    "ProductVersion":   "2.84.0.0",
+    "LegalCopyright":   "Copyright (C) 2026 SteamTools Team"
+  },
+  "VarFileInfo": {
+    "Translation": { "LangID": "0409", "CharsetID": "04B0" }
+  }
+}

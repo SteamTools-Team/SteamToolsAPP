@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SteamTools</title>
+  <link rel="icon" href="icon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/refresh.css">
+</head>
+<body>
+
+<script>
+(function () {
+  function _bind() {
+    var api = window.pywebview && window.pywebview.api;
+    if (!api) return;
+    document.getElementById('wc-minimize').addEventListener('click', function () { api.minimize(); });
+    document.getElementById('wc-close').addEventListener('click',    function () { api.close();    });
+  }
+  if (window.pywebview) { _bind(); }
+  else { window.addEventListener('pywebviewready', _bind); }
+})();
+</script>
+
+<div id="loading-screen" class="loading-screen">
+  <div class="loading-card">
+    <img src="icon.png" alt="ST" class="loading-logo"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="loading-logo-fallback" style="display:none">ST</div>
+    <div class="loading-brand">SteamTools</div>
+    <div class="spinner spinner--lg" style="margin-top:20px"></div>
+    <div class="loading-step" id="loading-step">Starting…</div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<div id="login-overlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo-wrap">
+      <img src="icon.png" alt="ST" class="login-logo"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="login-logo-fallback" style="display:none">ST</div>
+    </div>
+    <h1 class="login-title">SteamTools</h1>
+    <p class="login-desc">Connect your Discord account to access all features.</p>
+    <button class="login-discord-btn" id="login-discord-btn" type="button">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.044.03.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM6 13.5A2.5 2.5 0 1 0 11 13.5A2.5 2.5 0 1 0 6 13.5ZM13 13.5A2.5 2.5 0 1 0 18 13.5A2.5 2.5 0 1 0 13 13.5Z"/>
+      </svg>
+      Continue with Discord
+    </button>
+    <button class="login-alt-btn" id="login-code-btn" type="button">
+      No browser? Log in with a code
+    </button>
+    <div class="login-code-panel" id="login-code-panel" style="display:none">
+      <p class="login-code-steps">Open the <b>SteamTools</b> Discord server and run <code>/login</code> with this code:</p>
+      <div class="login-code" id="login-code-value">----</div>
+      <p class="login-code-hint" id="login-code-hint">Waiting for confirmation…</p>
+      <div class="login-code-actions">
+        <button class="login-code-action" id="login-code-refresh" type="button">New code</button>
+        <button class="login-code-action login-code-action--ghost" id="login-code-back" type="button">Back</button>
+      </div>
+    </div>
+    <p class="login-status" id="login-status" style="display:none"></p>
+    <p class="login-blocked" id="login-blocked" style="display:none"></p>
+    <button class="login-discord-btn" id="login-close-blocked" type="button" style="display:none">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true">
+  <div id="modal-dialog" class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title">Confirm</h3>
+      <button class="modal-close" id="modal-close" aria-label="Close">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer">
+      <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="game-details-overlay" class="game-details-overlay">
+  <div class="gd-panel">
+    <div class="gd-header">
+      <div class="gd-backdrop" id="gd-backdrop"></div>
+      <div class="gd-backdrop-shade"></div>
+      <button class="modal-close gd-close" id="gd-close" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="gd-titlebar">
+        <div class="gd-title" id="gd-title"></div>
+        <div class="gd-subtitle" id="gd-subtitle"></div>
+      </div>
+    </div>
+    <div class="gd-scroll" id="gd-scroll"></div>
+    <div class="gd-footer" id="gd-footer"></div>
+  </div>
+</div>
+
+<div id="prem-overlay" class="prem-overlay">
+  <div class="prem-card">
+    <div class="prem-head">
+      <div class="prem-logo"><img src="icon.png" alt="ST" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'" style="display:inline"><span style="display:none;font-size:.9rem;font-weight:800;color:var(--accent-hover)">ST</span></div>
+      <h2 class="prem-title">Upgrade to Premium</h2>
+      <p class="prem-sub">Unlock the full SteamTools experience</p>
+    </div>
+    <div class="prem-body">
+      <div class="prem-tier-label">Premium Tier 1 &amp; 2</div>
+      <ul class="prem-feats">
+        <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Update Manifest</li>
+        <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Full Bot access to all SteamTools Bot commands</li>
+        <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Faster performance &amp; higher limits</li>
+        <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Priority access to future updates</li>
+        <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Exclusive features available only for Premium users</li>
+        <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Premium support &amp; faster assistance</li>
+      </ul>
+      <div class="prem-tier-label" style="margin-top:14px">Premium Tier 2</div>
+      <ul class="prem-feats">
+        <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Unlimited downloads</li>
+        <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> New perks and tools added regularly</li>
+      </ul>
+    </div>
+    <div class="prem-foot">
+      <button class="prem-cta" id="prem-cta">Upgrade to Premium</button>
+      <button class="prem-skip" id="prem-skip" disabled>Dismiss <span id="prem-cd">6</span>s</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-layout">
+
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">
+        <img src="icon.png" alt="ST" width="28" height="28"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div style="display:none;width:28px;height:28px;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:var(--accent-hover)">ST</div>
+      </div>
+      <div class="sidebar-brand-text">
+        <span class="sidebar-brand-name">SteamTools</span>
+        <span class="sidebar-brand-version" id="sidebar-version">v10854</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <a class="nav-item active" data-page="dashboard" href="#dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-section-label">Games</div>
+
+      <a class="nav-item" data-page="install" href="#install">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>Install a Game</span>
+      </a>
+
+      <a class="nav-item" data-page="available" href="#available">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="8" y1="6" x2="21" y2="6"/>
+          <line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <span>Available Games</span>
+      </a>
+
+      <a class="nav-item" data-page="installed" href="#installed">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span>Installed Games</span>
+      </a>
+
+      <a class="nav-item" data-page="backup" href="#backup">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        <span>Reinstall Backup</span>
+      </a>
+
+      <a class="nav-item" data-page="achievements" href="#achievements">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="8" r="6"/>
+          <path d="M8.21 13.89 7 22l5-3 5 3-1.21-8.11"/>
+        </svg>
+        <span>Achievements</span>
+      </a>
+
+      <div class="nav-section-label">Other</div>
+
+      <a class="nav-item" data-page="settings" href="#settings">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M20 12h2M2 12h2M12 20v2M12 2v2"/>
+        </svg>
+        <span>Settings</span>
+      </a>
+
+      <a class="nav-item" data-page="diagnostic" href="#diagnostic">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>Diagnostic</span>
+      </a>
+
+      <a class="nav-item" data-page="gamefixes" href="#gamefixes">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>Game Fixes</span>
+      </a>
+
+      <a class="nav-item" data-page="repair" href="#repair">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        <span>Steam Repair</span>
+      </a>
+
+      <div class="nav-section-label">Info</div>
+
+      <a class="nav-item" data-page="credits" href="#credits">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>Credits</span>
+      </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="profile-card">
+        <div class="profile-avatar">ST</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name" id="sidebar-username">SteamTools</span>
+          <span class="user-tier user-tier--standard" id="user-tier-label">Standard</span>
+        </div>
+        <button class="sidebar-signout-btn" id="btn-signout" type="button" title="Sign out">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </aside>
+
+  <div class="main-area">
+
+    <header class="app-header">
+      <div class="header-left">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="header-breadcrumb">
+          <span class="breadcrumb-page" id="header-page-name">Dashboard</span>
+        </div>
+      </div>
+      <div class="header-center">
+        <div class="header-search">
+          <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" class="search-input" id="global-search" placeholder="Search games, AppID…" autocomplete="off">
+          <kbd class="search-kbd">⌘K</kbd>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="header-btn" id="header-refresh" title="Refresh current page">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
+        <div class="header-divider"></div>
+        <button class="header-btn" id="wc-minimize" title="Minimize">
+          <svg width="12" height="2" viewBox="0 0 12 2">
+            <line x1="0" y1="1" x2="12" y2="1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="header-btn wc-close" id="wc-close" title="Close">
+          <svg width="11" height="11" viewBox="0 0 11 11">
+            <line x1="1" y1="1" x2="10" y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="10" y1="1" x2="1"  y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div id="update-banner" style="display:none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <span id="update-banner-text">A new version is available.</span>
+      <a id="update-banner-link" href="#" target="_blank" rel="noopener" class="update-banner-btn">Download</a>
+    </div>
+
+    <div id="version-notice-banner" style="display:none">
+      <span id="version-notice-text"></span>
+    </div>
+
+    <main class="content-area" id="content-area">
+
+      <section id="page-dashboard" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Overview of your SteamTools environment</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="dashboard-refresh">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <div class="stats-row-4">
+          <div class="stat-card">
+            <div class="stat-icon stat-icon--accent">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-available-count"><div class="spinner spinner--sm"></div></div>
+              <div class="stat-label">Available Games</div>
+            </div>
+            <div class="stat-trend stat-trend--neutral">Live</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon stat-icon--green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-installed-count">0</div>
+              <div class="stat-label">Installed Games</div>
+            </div>
+            <div class="stat-trend stat-trend--neutral">Local</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" id="steam-stat-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-steam-status">Checking...</div>
+              <div class="stat-label">Steam Status</div>
+            </div>
+            <div class="stat-trend" id="steam-stat-trend">Auto</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon stat-icon--accent">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="stat-downloads-left">—</div>
+              <div class="stat-label">Downloads Left</div>
+            </div>
+            <div class="stat-trend stat-trend--neutral" id="downloads-stat-trend">Today</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Recent Installations</h3>
+              <a href="#installed" class="card-action" data-page="installed">View all</a>
+            </div>
+            <div class="card-body" id="recent-installs">
+              <div class="empty-state">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.5">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <p>No games installed yet</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">System Status</h3>
+              <button class="card-action" id="run-quick-diagnostic">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:3px">
+                  <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>Refresh
+              </button>
+            </div>
+            <div class="card-body" id="system-status-list">
+              <div class="status-list-item">
+                <span class="sli-label">Steam Path</span>
+                <span class="sli-value" id="sli-steam-path">Detecting…</span>
+              </div>
+              <div class="status-list-item">
+                <span class="sli-label">Steam Running</span>
+                <span class="sli-value" id="sli-steam-running"><div class="spinner spinner--sm"></div></span>
+              </div>
+              <div class="status-list-item">
+                <span class="sli-label">API Connection</span>
+                <span class="sli-value"><span class="badge badge--green">Online</span></span>
+              </div>
+              <div class="status-list-item">
+                <span class="sli-label">Data Folder</span>
+                <span class="sli-value"><span class="badge badge--green">Ready</span></span>
+              </div>
+              <div class="status-list-item">
+                <span class="sli-label">Last Refresh</span>
+                <span class="sli-value" id="sli-last-refresh">Just now</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Quick Actions</h3>
+          </div>
+          <div class="quick-actions-grid" style="padding:14px 18px">
+            <button class="quick-action-btn" data-page="install">
+              <div class="qa-icon qa-icon--accent">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </div>
+              <div class="qa-text">
+                <span class="qa-title">Install Game</span>
+                <span class="qa-desc">By AppID or URL</span>
+              </div>
+            </button>
+            <button class="quick-action-btn" data-page="available">
+              <div class="qa-icon qa-icon--blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+              </div>
+              <div class="qa-text">
+                <span class="qa-title">Browse Games</span>
+                <span class="qa-desc">View catalog</span>
+              </div>
+            </button>
+            <button class="quick-action-btn" data-page="diagnostic">
+              <div class="qa-icon qa-icon--yellow">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+              </div>
+              <div class="qa-text">
+                <span class="qa-title">Run Diagnostic</span>
+                <span class="qa-desc">Check Steam health</span>
+              </div>
+            </button>
+            <button class="quick-action-btn" data-page="repair">
+              <div class="qa-icon qa-icon--red">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+              </div>
+              <div class="qa-text">
+                <span class="qa-title">Repair Steam</span>
+                <span class="qa-desc">Fix common issues</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="page-install" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Install a Game</h1>
+            <p class="page-subtitle">Enter an AppID or Steam URL to download and install a game</p>
+          </div>
+        </div>
+
+        <div class="install-main-grid">
+
+          <div class="install-left-col">
+
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Game Identifier</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">AppID or Steam URL</label>
+                  <div class="input-with-btn">
+                    <input type="text" class="form-input" id="install-appid-input"
+                      placeholder="e.g. 1245620 or https://store.steampowered.com/app/1245620">
+                    <button class="btn btn-primary" id="install-btn">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      Install
+                    </button>
+                  </div>
+                </div>
+                <p class="form-hint install-form-hint">Supports: AppID numbers, Steam store URLs, steam:// protocol links</p>
+              </div>
+            </div>
+
+            <div class="card" id="install-manifest-card">
+              <div class="card-header">
+                <h3 class="card-title">Manual Manifest Installation</h3>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">Files</label>
+                  <div class="drop-zone" id="manifest-drop-zone">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p>Drop <strong>.zip</strong>, <strong>.manifest</strong>, or <strong>.lua</strong> files here</p>
+                    <span class="form-hint" style="margin:0">or click to browse</span>
+                  </div>
+                  <input type="file" id="manifest-file-input" accept=".zip,.manifest,.lua" multiple style="display:none">
+                  <div id="manifest-file-list" style="display:none;margin-top:8px"></div>
+                </div>
+                <button class="btn btn-primary" id="install-manifest-btn" disabled>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Install from Manifest
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="card install-progress-card" id="install-progress-card">
+            <div class="card-header">
+              <h3 class="card-title">Installation Progress</h3>
+              <span class="badge badge--neutral" id="install-progress-badge">Ready</span>
+            </div>            <div class="card-body">
+              <div class="install-game-info" id="install-game-info">
+                <div class="game-info-name" id="install-game-name">-</div>
+                <div class="game-info-id"   id="install-game-id">AppID: -</div>
+              </div>
+              <div class="install-steps" id="install-steps"></div>
+              <div class="progress-bar-container" id="install-progress-container" style="display:none">
+                <div class="progress-bar-label">
+                  <span id="progress-label">Downloading...</span>
+                  <span id="progress-pct">0%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div>
+                </div>
+              </div>
+              <div class="install-log" id="install-log" style="display:none"></div>
+            </div>
+          </div>
+
+        </div>
+
+          <div class="card install-progress-card" id="queue-card" style="display:none;margin-top:16px">
+            <div class="card-header">
+              <h3 class="card-title">Download Queue</h3>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="badge badge--accent" id="queue-count-badge">0 queued</span>
+                <span class="badge badge--neutral">Premium</span>
+              </div>
+            </div>
+            <div class="card-body" id="queue-body">
+              <div class="empty-state small"><p>Queue is empty — install games to add them here.</p></div>
+            </div>
+          </div>
+
+      </section>
+
+      <section id="page-available" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Available Games</h1>
+            <p class="page-subtitle" id="available-subtitle"></p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="available-refresh-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-bar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="available-search" placeholder="Search by name or AppID…" class="search-input-inner">
+          </div>
+          <div class="toolbar-right">
+            <select class="form-select" id="available-sort">
+              <option value="name">Name A–Z</option>
+              <option value="name-desc">Name Z–A</option>
+              <option value="appid">AppID ↑</option>
+              <option value="appid-desc">AppID ↓</option>
+            </select>
+          </div>
+
+          <div class="avail-options" id="available-options" hidden>
+            <button class="btn-icon avail-options-btn" id="available-options-btn" type="button" title="Search options" aria-haspopup="true" aria-expanded="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+              </svg>
+            </button>
+            <div class="avail-options-panel" id="available-options-panel" role="menu">
+              <div class="avail-options-title">Show in results</div>
+              <label class="avail-option-row">
+                <span class="avail-option-text"><span class="avail-option-name">DLC</span><span class="avail-option-desc">Downloadable content</span></span>
+                <span class="toggle"><input type="checkbox" data-opt="dlc"><span class="toggle-slider"></span></span>
+              </label>
+              <label class="avail-option-row">
+                <span class="avail-option-text"><span class="avail-option-name">Delisted games</span><span class="avail-option-desc">Removed from the Steam store</span></span>
+                <span class="toggle"><input type="checkbox" data-opt="delisted"><span class="toggle-slider"></span></span>
+              </label>
+              <label class="avail-option-row">
+                <span class="avail-option-text"><span class="avail-option-name">Software &amp; tools</span><span class="avail-option-desc">Apps, videos, hardware</span></span>
+                <span class="toggle"><input type="checkbox" data-opt="software"><span class="toggle-slider"></span></span>
+              </label>
+              <label class="avail-option-row">
+                <span class="avail-option-text"><span class="avail-option-name">NSFW</span><span class="avail-option-desc">Adult content</span></span>
+                <span class="toggle"><input type="checkbox" data-opt="nsfw"><span class="toggle-slider"></span></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="available-filter-bar" style="display:none">
+          <select class="form-select" id="available-filter-type" style="font-size:0.78rem;padding:5px 10px;height:32px">
+            <option value="all">All Types</option>
+            <option value="game">Game</option>
+            <option value="dlc">DLC</option>
+            <option value="software">Software</option>
+          </select>
+          <select class="form-select" id="available-filter-tag" style="font-size:0.78rem;padding:5px 10px;height:32px">
+            <option value="">All Genres</option>
+          </select>
+          <button class="filter-chip" id="available-filter-nodrm">No DRM</button>
+          <button class="filter-chip active" id="available-filter-hidensfw">Hide NSFW</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-ghost btn-sm" id="available-clear-filters" style="display:none;color:var(--text-3)">× Clear filters</button>
+        </div>
+
+        <div class="games-grid" id="available-games-grid">
+          <div style="grid-column:1/-1;display:flex;justify-content:center;padding:48px">
+            <div class="spinner spinner--lg"></div>
+          </div>
+        </div>
+
+        <div class="pagination" id="available-pagination"></div>
+
+      </section>
+
+      <section id="page-installed" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Installed Games</h1>
+            <p class="page-subtitle" id="installed-subtitle">Tracking your locally installed games</p>
+          </div>
+          <button class="btn btn-ghost-danger btn-sm" id="remove-all-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            Remove All
+          </button>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-bar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="installed-search" placeholder="Search installed games…" class="search-input-inner">
+          </div>
+        </div>
+
+        <div class="games-grid" id="installed-grid-container"></div>
+
+        <div class="installed-empty" id="installed-empty" style="display:none">
+          <div class="empty-state-large">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <h3>No games installed</h3>
+            <p>Install games using the Install tab to see them here.</p>
+            <a href="#install" class="btn btn-primary btn-sm" data-page="install">Install a Game</a>
+          </div>
+        </div>
+
+        <div class="pagination" id="installed-pagination"></div>
+
+      </section>
+
+      <section id="page-backup" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Reinstall from Backup</h1>
+            <p class="page-subtitle">Export your game list or restore it on another machine</p>
+          </div>
+        </div>
+
+        <div class="backup-grid">
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-with-icon">
+                <div class="card-title-icon card-title-icon--green">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Export Game List</h3>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted">Save your current installed game list as a JSON file. Use it to reinstall on another system.</p>
+              <div class="export-info">
+                <div class="export-stat">
+                  <div class="export-stat-value" id="export-game-count">0</div>
+                  <div class="export-stat-label">games to export</div>
+                </div>
+              </div>
+              <button class="btn btn-success btn-full" id="export-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export as JSON
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-with-icon">
+                <div class="card-title-icon card-title-icon--accent">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Import &amp; Reinstall</h3>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted">Load a previously exported JSON backup and automatically reinstall all listed games.</p>
+              <div class="import-drop-zone" id="import-drop-zone">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p>Drag &amp; drop your JSON backup here</p>
+                <span class="text-muted" style="font-size:0.75rem">or</span>
+                <button class="btn btn-ghost btn-sm" id="import-browse-btn">Browse file</button>
+                <input type="file" id="import-file-input" accept=".json" style="display:none">
+              </div>
+              <div id="import-preview" style="display:none">
+                <div class="import-preview-header">
+                  <span class="import-preview-filename" id="import-filename"></span>
+                  <button class="btn-icon btn-icon--sm" id="import-clear">×</button>
+                </div>
+                <div class="import-preview-list" id="import-game-list"></div>
+                <button class="btn btn-primary btn-full" id="import-install-btn">Reinstall All Games</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="card" id="reinstall-progress-card" style="display:none">
+          <div class="card-header">
+            <h3 class="card-title">Reinstallation Progress</h3>
+            <span class="badge badge--accent" id="reinstall-badge">Running</span>
+          </div>
+          <div class="card-body" id="reinstall-progress-body"></div>
+        </div>
+
+      </section>
+
+      <section id="page-settings" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Settings</h1>
+            <p class="page-subtitle">Configure preferences</p>
+          </div>
+        </div>
+
+        <div class="settings-stack">
+
+          <section class="settings-card">
+            <div class="settings-card-head">
+              <span class="settings-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </span>
+              <div>
+                <h3 class="settings-card-title">Steam</h3>
+                <p class="settings-card-sub">Installation path &amp; auto-detection</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <div class="settings-section">
+                <h3 class="settings-section-title">Steam Installation Path</h3>
+                <p class="settings-section-desc">Set a custom path if auto-detection fails. Leave empty to use automatic detection.</p>
+                <div class="form-group">
+                  <label class="form-label">Current Detected Path</label>
+                  <div class="path-display">
+                    <span class="path-display-text" id="current-steam-path-text">Detecting…</span>
+                    <span id="current-steam-path-badge"></span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Custom Path Override</label>
+                  <div class="input-row">
+                    <input type="text" class="form-input" id="custom-steam-path-input"
+                      placeholder="C:\Program Files (x86)\Steam">
+                    <button class="btn btn-ghost btn-sm" id="validate-steam-path-btn">Validate</button>
+                  </div>
+                  <p class="form-hint">Paste a Steam folder or steam.exe path — e.g. C:\Steam or D:\Games\Steam</p>
+                  <div class="validation-result" id="path-validation-result" style="display:none"></div>
+                </div>
+                <div class="btn-row">
+                  <button class="btn btn-primary" id="save-steam-path-btn">Save Path</button>
+                  <button class="btn btn-ghost-danger" id="reset-steam-path-btn">Reset to Default</button>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h3 class="settings-section-title">Auto-detection Paths</h3>
+                <p class="settings-section-desc">These standard paths are checked during automatic detection:</p>
+                <div class="path-list">
+                  <div class="path-list-item">
+                    <code>C:\Program Files (x86)\Steam</code>
+                    <span id="path-check-1"><div class="spinner spinner--sm"></div></span>
+                  </div>
+                  <div class="path-list-item">
+                    <code>C:\Program Files\Steam</code>
+                    <span id="path-check-2"><span class="badge badge--neutral">Not checked</span></span>
+                  </div>
+                  <div class="path-list-item">
+                    <code>C:\Steam</code>
+                    <span id="path-check-3"><span class="badge badge--neutral">Not checked</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-card">
+            <div class="settings-card-head">
+              <span class="settings-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+              </span>
+              <div>
+                <h3 class="settings-card-title">Appearance</h3>
+                <p class="settings-card-sub">Theme, animations &amp; density</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <div class="settings-section">
+                <h3 class="settings-section-title">Appearance</h3>
+                <div class="settings-toggle-row">
+                  <div class="settings-toggle-info">
+                    <span class="settings-toggle-label">UI Animations</span>
+                    <span class="settings-toggle-desc">Enable smooth transitions and hover effects</span>
+                  </div>
+                  <label class="toggle"><input type="checkbox" id="pref-animations" checked><span class="toggle-slider"></span></label>
+                </div>
+                <div class="settings-toggle-row">
+                  <div class="settings-toggle-info">
+                    <span class="settings-toggle-label">Compact Mode</span>
+                    <span class="settings-toggle-desc">Reduce padding and card sizes</span>
+                  </div>
+                  <label class="toggle"><input type="checkbox" id="pref-compact"><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+              <div class="settings-section">
+                <h3 class="settings-section-title">Theme</h3>
+                <p class="settings-section-desc settings-section-desc--theme">Choose your visual style</p>
+                <div class="theme-grid" id="theme-picker">
+                  <button class="theme-card" data-theme="default">
+                    <div class="theme-card-preview theme-card-preview--default"></div>
+                    <div class="theme-card-info">
+                      <div class="theme-card-label">
+                        <span class="theme-card-name">Default</span>
+                        <span class="theme-card-desc">Glass gray + purple</span>
+                      </div>
+                      <div class="theme-card-check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </div>
+                  </button>
+                  <button class="theme-card" data-theme="deep">
+                    <div class="theme-card-preview theme-card-preview--deep"></div>
+                    <div class="theme-card-info">
+                      <div class="theme-card-label">
+                        <span class="theme-card-name">Deep</span>
+                        <span class="theme-card-desc">True black</span>
+                      </div>
+                      <div class="theme-card-check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </div>
+                  </button>
+                  <button class="theme-card" data-theme="slate">
+                    <div class="theme-card-preview theme-card-preview--slate"></div>
+                    <div class="theme-card-info">
+                      <div class="theme-card-label">
+                        <span class="theme-card-name">Slate</span>
+                        <span class="theme-card-desc">Gray sober</span>
+                      </div>
+                      <div class="theme-card-check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </div>
+                  </button>
+                  <button class="theme-card" data-theme="classic">
+                    <div class="theme-card-preview theme-card-preview--classic"></div>
+                    <div class="theme-card-info">
+                      <div class="theme-card-label">
+                        <span class="theme-card-name">Classic</span>
+                        <span class="theme-card-desc">Dark purple (legacy)</span>
+                      </div>
+                      <div class="theme-card-check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </div>
+                  </button>
+                  <button class="theme-card" data-theme="glass">
+                    <div class="theme-card-preview theme-card-preview--glass"></div>
+                    <div class="theme-card-info">
+                      <div class="theme-card-label">
+                        <span class="theme-card-name">Glass</span>
+                        <span class="theme-card-desc">Translucent window</span>
+                      </div>
+                      <div class="theme-card-check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-card">
+            <div class="settings-card-head">
+              <span class="settings-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+              </span>
+              <div>
+                <h3 class="settings-card-title">Behavior</h3>
+                <p class="settings-card-sub">Install &amp; runtime actions</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <div class="settings-section">
+                <h3 class="settings-section-title">Behavior</h3>
+                  <div class="settings-toggle-row">
+                    <div class="settings-toggle-info">
+                      <span class="settings-toggle-label">Auto-restart Steam</span>
+                      <span class="settings-toggle-desc">Automatically restart Steam after installation</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="pref-auto-restart" checked><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="settings-toggle-row">
+                    <div class="settings-toggle-info">
+                      <span class="settings-toggle-label">Auto-close Steam</span>
+                      <span class="settings-toggle-desc">Automatically close Steam before installation</span>
+                    </div>
+                    <label class="toggle"><input type="checkbox" id="pref-auto-close-steam" checked><span class="toggle-slider"></span></label>
+                  </div>
+                <div class="settings-toggle-row">
+                  <div class="settings-toggle-info">
+                    <span class="settings-toggle-label">Confirm before removal</span>
+                    <span class="settings-toggle-desc">Show a confirmation dialog before removing a game</span>
+                  </div>
+                  <label class="toggle"><input type="checkbox" id="pref-confirm-remove" checked><span class="toggle-slider"></span></label>
+                </div>
+                <div class="settings-toggle-row">
+                  <div class="settings-toggle-info">
+                    <span class="settings-toggle-label">Image Cache</span>
+                    <span class="settings-toggle-desc">Cache game images locally for faster loading</span>
+                  </div>
+                  <label class="toggle"><input type="checkbox" id="pref-image-cache" checked><span class="toggle-slider"></span></label>
+                </div>
+                <div class="settings-toggle-row">
+                  <div class="settings-toggle-info">
+                    <span class="settings-toggle-label">BetterSteamTools DLLs</span>
+                    <span class="settings-toggle-desc">Automatically install BetterSteamTools (BST fix) with every game install</span>
+                  </div>
+                  <label class="toggle"><input type="checkbox" id="pref-auto-install-ost"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="settings-toggle-row">
+                  <div class="settings-toggle-info">
+                    <span class="settings-toggle-label">Download Queue <span class="badge badge--accent" style="font-size:0.58rem;padding:1px 5px;vertical-align:middle">Premium</span></span>
+                    <span class="settings-toggle-desc">Queue multiple downloads and updates that install one by one automatically</span>
+                  </div>
+                  <label class="toggle"><input type="checkbox" id="pref-download-queue"><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-card" style="order:5">
+            <div class="settings-card-head">
+              <span class="settings-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              </span>
+              <div>
+                <h3 class="settings-card-title">Data</h3>
+                <p class="settings-card-sub">Storage locations &amp; cleanup</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <div class="settings-section">
+                <h3 class="settings-section-title">Data Storage</h3>
+                <div class="data-info-grid">
+                  <div class="data-info-item">
+                    <span class="data-info-label">Settings File</span>
+                    <code class="data-info-value">%USERPROFILE%\Documents\SteamTools\settings.json</code>
+                  </div>
+                  <div class="data-info-item">
+                    <span class="data-info-label">Install Records</span>
+                    <code class="data-info-value">%USERPROFILE%\Documents\SteamTools\installed_games.json</code>
+                  </div>
+                  <div class="data-info-item">
+                    <span class="data-info-label">UI Storage</span>
+                    <code class="data-info-value">Browser localStorage (current session)</code>
+                  </div>
+                  <div class="data-info-item">
+                    <span class="data-info-label">Image Cache</span>
+                    <code class="data-info-value">%USERPROFILE%\Documents\SteamTools\image_cache\</code>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-section">
+                <h3 class="settings-section-title">Clear Data</h3>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:8px">
+                    <div>
+                      <div style="font-size:0.85rem;color:var(--text)">Game Lists & Catalog</div>
+                      <div style="font-size:0.75rem;color:var(--text-3)">Hubcap, DepotBox, SteamTools, Ryuu caches + trending data</div>
+                    </div>
+                    <button class="btn btn-ghost-danger btn-sm" id="clear-game-lists-btn">Clear</button>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:8px">
+                    <div>
+                      <div style="font-size:0.85rem;color:var(--text)">Game Fixes</div>
+                      <div style="font-size:0.75rem;color:var(--text-3)">Fixes list and fix metadata cache</div>
+                    </div>
+                    <button class="btn btn-ghost-danger btn-sm" id="clear-fixes-btn">Clear</button>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:8px">
+                    <div>
+                      <div style="font-size:0.85rem;color:var(--text)">Image Cache</div>
+                      <div style="font-size:0.75rem;color:var(--text-3)">Downloaded game cover images</div>
+                    </div>
+                    <button class="btn btn-ghost-danger btn-sm" id="clear-image-cache-btn">Clear</button>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:8px">
+                    <div>
+                      <div style="font-size:0.85rem;color:var(--text)">UI Preferences</div>
+                      <div style="font-size:0.75rem;color:var(--text-3)">Theme, sidebar state, and display settings</div>
+                    </div>
+                    <button class="btn btn-ghost-danger btn-sm" id="clear-local-storage-btn">Clear</button>
+                  </div>
+                </div>
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+                  <p class="settings-section-desc text-warning">⚠ This will permanently clear ALL stored data including install records, settings, caches, and logs.</p>
+                  <button class="btn btn-ghost-danger" id="clear-all-data-btn">Clear All Application Data</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-card" style="order:4">
+            <div class="settings-card-head">
+              <span class="settings-card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </span>
+              <div>
+                <h3 class="settings-card-title">Provider</h3>
+                <p class="settings-card-sub">Source for game data &amp; manifests</p>
+              </div>
+            </div>
+            <div class="settings-card-body">
+              <div class="settings-section">
+                <h3 class="settings-section-title">Provider</h3>
+                <p class="settings-section-desc">Choose where to fetch game data and manifests</p>
+                <div class="provider-options" id="provider-options">
+                  <label class="provider-option">
+                    <input type="radio" name="provider" value="steamtools">
+                    <div class="provider-option-content">
+                      <span class="provider-option-name">SteamTools API <span class="badge badge--accent" style="font-size:0.6rem;vertical-align:middle;padding:1px 5px">Official</span> <span class="badge badge--green" style="font-size:0.6rem;vertical-align:middle;padding:1px 5px">Default</span></span>
+                      <span class="provider-option-desc">Use the SteamTools API for manifests</span>
+                    </div>
+                  </label>
+                  <label class="provider-option">
+                    <input type="radio" name="provider" value="depotbox">
+                    <div class="provider-option-content">
+                      <span class="provider-option-name">DepotBox API</span>
+                      <span class="provider-option-desc">Use DepotBox for manifests and search</span>
+                    </div>
+                  </label>
+                  <label class="provider-option">
+                    <input type="radio" name="provider" value="hubcap">
+                    <div class="provider-option-content">
+                      <span class="provider-option-name">Hubcap API</span>
+                      <span class="provider-option-desc">Use Hubcap for manifests and library</span>
+                    </div>
+                  </label>
+                  <label class="provider-option">
+                    <input type="radio" name="provider" value="default">
+                    <div class="provider-option-content">
+                      <span class="provider-option-name">Ryuu API</span>
+                      <span class="provider-option-desc">Use the built-in game list and manifest service</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-section" id="hubcap-settings" style="display:none">
+                <h3 class="settings-section-title">Hubcap API Key</h3>
+                <p class="settings-section-desc">Enter your Hubcap API key to use the Hubcap provider</p>
+                <div class="form-group">
+                  <div class="input-row">
+                    <input type="password" class="form-input" id="hubcap-api-key-input"
+                      placeholder="Enter your Hubcap API key">
+                    <button class="btn btn-ghost btn-sm" id="toggle-hubcap-key-visibility">Show</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+      </section>
+
+      <section id="page-diagnostic" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Steam Diagnostic</h1>
+            <p class="page-subtitle">Comprehensive health check of your Steam installation</p>
+          </div>
+          <button class="btn btn-primary" id="run-diagnostic-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Run Diagnostic
+          </button>
+        </div>
+
+        <div id="diagnostic-idle" class="empty-state-large">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <h3>Ready to diagnose</h3>
+          <p>Click "Run Diagnostic" to perform a comprehensive Steam health check covering files, directories, users, processes, and disk space.</p>
+        </div>
+
+        <div id="diagnostic-running" style="display:none">
+          <div class="diagnostic-status-banner">
+            <div class="spinner"></div>
+            <span>Running diagnostic… please wait</span>
+          </div>
+        </div>
+
+        <div id="diagnostic-results" style="display:none">
+
+          <div class="diagnostic-summary" id="diagnostic-summary"></div>
+
+          <div class="diagnostic-grid">
+
+            <div class="diag-card" id="diag-steam-detect">
+              <div class="diag-card-header">
+                <div class="diag-card-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="diag-card-title">Steam Detection</div>
+                  <div class="diag-card-subtitle" id="diag-detect-path">—</div>
+                </div>
+                <div class="diag-card-status" id="diag-detect-status"></div>
+              </div>
+            </div>
+
+            <div class="diag-card" id="diag-critical-files">
+              <div class="diag-card-header">
+                <div class="diag-card-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="diag-card-title">Critical Files</div>
+                  <div class="diag-card-subtitle" id="diag-files-sub">Not checked</div>
+                </div>
+                <div class="diag-card-status" id="diag-files-status"></div>
+              </div>
+              <div class="diag-card-body" id="diag-files-body"></div>
+            </div>
+
+            <div class="diag-card" id="diag-directories">
+              <div class="diag-card-header">
+                <div class="diag-card-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="diag-card-title">Directories</div>
+                  <div class="diag-card-subtitle" id="diag-dirs-sub">Not checked</div>
+                </div>
+                <div class="diag-card-status" id="diag-dirs-status"></div>
+              </div>
+              <div class="diag-card-body" id="diag-dirs-body"></div>
+            </div>
+
+            <div class="diag-card" id="diag-users">
+              <div class="diag-card-header">
+                <div class="diag-card-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="diag-card-title">Steam Users</div>
+                  <div class="diag-card-subtitle" id="diag-users-sub">Not checked</div>
+                </div>
+                <div class="diag-card-status" id="diag-users-status"></div>
+              </div>
+              <div class="diag-card-body" id="diag-users-body"></div>
+            </div>
+
+            <div class="diag-card" id="diag-processes">
+              <div class="diag-card-header">
+                <div class="diag-card-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="diag-card-title">Active Processes</div>
+                  <div class="diag-card-subtitle" id="diag-procs-sub">Not checked</div>
+                </div>
+                <div class="diag-card-status" id="diag-procs-status"></div>
+              </div>
+              <div class="diag-card-body" id="diag-procs-body"></div>
+            </div>
+
+            <div class="diag-card" id="diag-disk">
+              <div class="diag-card-header">
+                <div class="diag-card-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="diag-card-title">Disk Space</div>
+                  <div class="diag-card-subtitle" id="diag-disk-sub">Not checked</div>
+                </div>
+                <div class="diag-card-status" id="diag-disk-status"></div>
+              </div>
+              <div class="diag-card-body" id="diag-disk-body">
+                <div id="diag-disk-bar-container" style="display:none">
+                  <div class="disk-bar"><div class="disk-bar-fill" id="diag-disk-bar-fill" style="width:0%"></div></div>
+                  <div class="disk-bar-labels" id="diag-disk-bar-labels"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <section id="page-repair" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Steam Repair</h1>
+            <p class="page-subtitle">Fixes the common Steam/SteamTools issues</p>
+          </div>
+        </div>
+
+        <div class="repair-layout">
+
+          <div class="card repair-info-card">
+            <div class="card-header">
+              <h3 class="card-title">Repair Actions</h3>
+            </div>
+            <div class="card-body">
+              <div class="repair-feature-list">
+                <div class="repair-feature">
+                  <div class="repair-feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <span>Backup critical config files</span>
+                </div>
+                <div class="repair-feature">
+                  <div class="repair-feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <span>Clear appcache, htmlcache, steamui</span>
+                </div>
+                <div class="repair-feature">
+                  <div class="repair-feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <span>Remove temporary &amp; session files</span>
+                </div>
+                <div class="repair-feature">
+                  <div class="repair-feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <span>Reset Steam package folder</span>
+                </div>
+                <div class="repair-feature">
+                  <div class="repair-feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <span>Clean Steam log files</span>
+                </div>
+                <div class="repair-feature">
+                  <div class="repair-feature-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  <span>Flush DNS cache (ipconfig /flushdns)</span>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-full" id="start-repair-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+                Start Repair
+              </button>
+            </div>
+            <div class="repair-options-section">
+              <div class="repair-options-title">Optional modules</div>
+              <div class="repair-option-row">
+                <label class="toggle"><input type="checkbox" id="repair-bettersteamtools-toggle"><span class="toggle-slider"></span></label>
+                <div class="repair-option-info">
+                  <span class="repair-option-label">BetterSteamTools (BST Fix) <span class="star-recommended">★</span></span>
+                  <span class="repair-option-desc">Installs the latest BetterSteamTools into Steam (dwmapi.dll, xinput1_4.dll, OpenSteamTool.dll)</span>
+                </div>
+              </div>
+              <div class="repair-option-row">
+                <label class="toggle"><input type="checkbox" id="repair-cloudredirect-toggle"><span class="toggle-slider"></span></label>
+                <div class="repair-option-info">
+                  <span class="repair-option-label">CloudRedirect</span>
+                  <span class="repair-option-desc">Downloads latest CloudRedirectCLI + DLL from GitHub</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card repair-progress-card" id="repair-progress-card">
+            <div class="card-header">
+              <h3 class="card-title">Repair Progress</h3>
+              <span class="badge" id="repair-status-badge">Idle</span>
+            </div>
+            <div class="card-body">
+              <div class="repair-steps" id="repair-steps"></div>
+              <div id="repair-complete-actions" style="display:none">
+                <div class="repair-complete-message" id="repair-complete-message"></div>
+                <div class="btn-row">
+                  <button class="btn btn-primary" id="repair-restart-steam-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Restart Steam
+                  </button>
+                  <button class="btn btn-ghost" id="repair-done-btn">Reset</button>
+                </div>
+              </div>
+            </div>
+            <div class="repair-log-section">
+              <div class="repair-log-header">Repair Log</div>
+              <div class="log-output" id="repair-log"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <section id="page-fixes" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Online Fixes</h1>
+            <p class="page-subtitle">Apply network fixes and patches to your games</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-ghost" id="fixes-refresh-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="fixes-toolbar">
+          <div class="search-bar" style="flex:1;max-width:360px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="search-input-inner" id="fixes-search" placeholder="Search fixes…">
+          </div>
+          <span class="fixes-count" id="fixes-count"></span>
+        </div>
+
+        <div id="fixes-grid" class="games-grid">
+          <div class="loading-placeholder"><div class="spinner"></div><p>Loading fixes…</p></div>
+        </div>
+
+      </section>
+
+      <section id="page-gamefixes" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Game Fixes</h1>
+            <p class="page-subtitle">Bypass, online and hypervisor fixes for your games</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-ghost" id="gamefixes-refresh-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="fixes-toolbar">
+          <div class="search-bar" style="flex:1;max-width:360px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="search-input-inner" id="gamefixes-search" placeholder="Search game fixes…">
+          </div>
+          <span class="fixes-count" id="gamefixes-count"></span>
+        </div>
+
+        <div id="gamefixes-grid" class="games-grid">
+          <div class="loading-placeholder"><div class="spinner"></div><p>Loading game fixes…</p></div>
+        </div>
+
+      </section>
+
+      <section id="page-credits" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Credits</h1>
+            <p class="page-subtitle">About SteamTools and the team behind it</p>
+          </div>
+        </div>
+
+        <div class="credits-layout">
+
+          <div class="card credits-hero-card">
+            <div class="credits-hero">
+              <div class="credits-logo">
+                <img src="icon.png" alt="SteamTools" width="62" height="62">
+              </div>
+              <h2 class="credits-app-name">SteamTools</h2>
+              <div class="credits-version" id="credits-version">Version 10854</div>
+              <p class="credits-tagline">Professional Steam game management - install, manage, repair and backup your Steam library with ease.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Development Team</h3>
+            </div>
+            <div class="card-body credits-links" id="credits-links">
+              <div class="credits-link-item">
+                <div class="credits-link-icon credits-link-icon--accent">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                </div>
+                <div class="credits-link-info">
+                  <span class="credits-link-label">Website</span>
+                  <span class="credits-link-value" id="credit-site">Loading…</span>
+                </div>
+                <a class="btn btn-ghost btn-sm" id="credit-site-btn" href="#" target="_blank" rel="noopener">Visit</a>
+              </div>
+
+              <div class="credits-link-item">
+                <div class="credits-link-icon" style="background:rgba(88,101,242,0.12);border:1px solid rgba(88,101,242,0.22)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="#5865F2">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.001.022.015.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+                  </svg>
+                </div>
+                <div class="credits-link-info">
+                  <span class="credits-link-label">Discord</span>
+                  <span class="credits-link-value" id="credit-discord">Loading…</span>
+                </div>
+                <a class="btn btn-ghost btn-sm" id="credit-discord-btn" href="#" target="_blank" rel="noopener">Join</a>
+              </div>
+
+              <div class="credits-link-item">
+                <div class="credits-link-icon" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                  </svg>
+                </div>
+                <div class="credits-link-info">
+                  <span class="credits-link-label">GitHub</span>
+                  <span class="credits-link-value" id="credit-github">Loading…</span>
+                </div>
+                <a class="btn btn-ghost btn-sm" id="credit-github-btn" href="#" target="_blank" rel="noopener">View</a>
+              </div>
+
+              <div class="credits-link-item">
+                <div class="credits-link-icon credits-link-icon--accent">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+                <div class="credits-link-info">
+                  <span class="credits-link-label">Developer</span>
+                  <span class="credits-link-value" id="credit-pseudo">Loading…</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Application Info</h3>
+            </div>
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Version</span>
+                  <span class="info-value" id="credits-version-detail">10854</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Platform</span>
+                  <span class="info-value">Windows (x86/x64)</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Local Config</span>
+                  <span class="info-value">%USERPROFILE%\Documents\SteamTools\</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">License</span>
+                  <span class="info-value">Proprietary</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <section id="page-achievements" class="page-section">
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Achievements</h1>
+            <p class="page-subtitle">Unlock or lock achievements for games you own. Steam must be running and signed in.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="ach-back-btn" style="display:none">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back to games
+          </button>
+        </div>
+
+        <div id="ach-games-view">
+          <div class="toolbar">
+            <div class="search-bar">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="ach-games-search" placeholder="Search your games…" class="search-input-inner">
+            </div>
+            <button class="btn btn-ghost btn-sm" id="ach-manual-btn" title="Open by AppID">Open by AppID</button>
+          </div>
+          <div class="games-grid" id="ach-games-grid"></div>
+          <div id="ach-games-status" class="ach-status"></div>
+        </div>
+
+        <div id="ach-list-view" style="display:none">
+
+          <div class="ach-hero" id="ach-hero">
+            <div class="ach-hero-shade"></div>
+            <div class="ach-hero-body">
+              <h2 id="ach-game-name"></h2>
+              <div class="ach-hero-meta">
+                <div class="ach-progress"><span id="ach-progress-fill"></span></div>
+                <span id="ach-game-meta" class="ach-meta"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ach-toolbar">
+            <div class="search-bar ach-search">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="ach-search" placeholder="Search achievements…" class="search-input-inner">
+            </div>
+            <div class="ach-list-actions">
+              <button class="btn btn-ghost btn-sm" id="ach-unlock-all">Unlock all</button>
+              <button class="btn btn-ghost btn-sm" id="ach-lock-all">Lock all</button>
+              <button class="btn btn-ghost btn-sm" id="ach-reset-sel">Reset</button>
+              <button class="btn btn-primary btn-sm" id="ach-apply" disabled>Apply changes</button>
+            </div>
+          </div>
+
+          <div class="ach-items" id="ach-items"></div>
+          <div id="ach-list-status" class="ach-status"></div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div class="queue-float-bar" id="queue-float-bar" style="display:none">
+  <div class="queue-float-left">
+    <span class="queue-float-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </span>
+    <div class="queue-float-info">
+      <span class="queue-float-count" id="queue-float-count">0 games queued</span>
+      <span class="queue-float-sub" id="queue-float-sub">Click Install to download everything</span>
+    </div>
+  </div>
+  <div class="queue-float-actions">
+    <button class="btn btn-primary btn-sm" id="queue-float-install">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Install
+    </button>
+    <button class="btn-icon btn-icon--sm queue-float-close" id="queue-float-close" title="Hide">×</button>
+  </div>
+</div>
+
+<div id="js-error-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#f4516c;color:#fff;font-family:monospace;font-size:13px;padding:10px 16px;white-space:pre-wrap;word-break:break-all"></div>
+<script>
+  window.onerror = function(msg, src, line, col, err) {
+    var b = document.getElementById('js-error-banner');
+    if (b) { b.style.display = 'block'; b.textContent = '❌ JS ERROR: ' + msg + '\n' + src + ':' + line; }
+  };
+  window.addEventListener('unhandledrejection', function(e) {
+    var b = document.getElementById('js-error-banner');
+    if (b) { b.style.display = 'block'; b.textContent = (b.textContent||'') + '\n❌ PROMISE: ' + (e.reason || e); }
+  });
+</script>
+
+<script src="js/state.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/queue.js"></script>
+<script src="js/pages/dashboard.js"></script>
+<script src="js/pages/install.js"></script>
+<script src="js/pages/game-details.js"></script>
+<script src="js/pages/available.js"></script>
+<script src="js/pages/installed.js"></script>
+<script src="js/pages/backup.js"></script>
+<script src="js/pages/settings.js"></script>
+<script src="js/pages/diagnostic.js"></script>
+<script src="js/pages/repair.js"></script>
+<script src="js/pages/fixes.js"></script>
+<script src="js/pages/gamefixes.js"></script>
+<script src="js/pages/credits.js"></script>
+<script src="js/pages/achievements.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Build output
+*.exe
+*.exe~
+SteamTools.exe
+SteamTools-release.exe
+
+# Backups / temp
+*.bak
+*.bak2
+*.new
+_steamtools_update.bat
+
+# Local / editor
+.claude/
+.idea/
+.vscode/
+*.log
+
+# OS
+Thumbs.db
+desktop.ini
